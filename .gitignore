@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Database
+backend/inventory.db
+backend/*.db-journal
+
+# Node
+node_modules/
+dist/
+frontend/node_modules/
+*.tsbuildinfo
+
+# Claude Code local
+.claude/settings.local.json
+.claude/instructions.log
+CLAUDE.local.md
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*

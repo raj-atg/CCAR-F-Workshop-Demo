@@ -1,0 +1,50 @@
+name: Claude API review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    # Gated on a repo secret so a fork without ANTHROPIC_API_KEY configured
+    # doesn't fail CI — the job is skipped entirely rather than erroring.
+    if: ${{ github.repository_owner != '' && vars.CLAUDE_REVIEW_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run schema-validated review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: npm run ci-review > review-output.json
+
+      - name: Show findings
+        run: cat review-output.json
+
+      - name: Post inline PR comments
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const result = JSON.parse(fs.readFileSync('review-output.json', 'utf8'));
+            const findings = result.structured_output?.findings ?? result.findings ?? [];
+            for (const finding of findings) {
+              await github.rest.pulls.createReviewComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.issue.number,
+                commit_id: context.payload.pull_request.head.sha,
+                path: finding.file,
+                line: finding.line,
+                body: `**${finding.severity}**: ${finding.issue}\n\nSuggestion: ${finding.suggestion}`,
+              });
+            }

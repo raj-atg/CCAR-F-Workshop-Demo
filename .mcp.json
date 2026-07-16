@@ -1,0 +1,26 @@
+{
+  "mcpServers": {
+    "inventory": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["-m", "inventory_mcp.server"],
+      "cwd": "${CLAUDE_PROJECT_DIR:-.}/mcp",
+      "env": {
+        "INVENTORY_DB_PATH": "${INVENTORY_DB_PATH:-${CLAUDE_PROJECT_DIR:-.}/backend/inventory.db}"
+      }
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    },
+    "github": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
+      }
+    }
+  }
+}
