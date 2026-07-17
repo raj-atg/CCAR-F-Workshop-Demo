@@ -16,6 +16,14 @@ A tiny factory **inventory manager**. Three things it tracks:
 
 It has a web page for each (a table you can add/edit/delete rows in) and a small API behind it. That's the whole app. Don't worry about mastering the app — you'll mostly be *asking Claude* to work on it.
 
+**Your edits are real and persist.** Adding, editing, or deleting a row in the browser writes to your local `backend/inventory.db` file — reload the page and it's still there. That's fine: the database file is `.gitignore`d, so nothing you do in the UI can end up in version control, and it only affects your own machine. If you want a clean slate at any point (e.g. after experimenting), reset it with:
+
+```
+npm run seed
+```
+
+This drops and rebuilds the database back to exactly 4 suppliers, 10 items, and 10 orders.
+
 ---
 
 ## 2. Setup (do this once, before the workshop)
@@ -57,6 +65,22 @@ npm run seed
 ```
 
 The last line (`npm run seed`) fills the database with sample data. You should see `Seeded 4 suppliers, 10 items, 10 orders.`
+
+### Confirm you're ready (one command)
+
+Run this from the repo root:
+
+```
+npm run doctor
+```
+
+It checks everything at once — Python, Node, the Claude Code CLI, the installed dependencies, and the seeded database — and tells you plainly whether you're ready:
+
+```
+✓ You're ready for the workshop.
+```
+
+If anything is missing, it prints a red `✗` next to that item **with the exact command to fix it**. Fix those, then run `npm run doctor` again until everything is green. (Don't move on until it is — a green doctor means the demos will work.)
 
 ### Start the app (two terminals)
 
@@ -145,6 +169,9 @@ The other four (a confusing rename, an untested file, an inconsistent date forma
 
 | You want to… | Run |
 | --- | --- |
+| Check you're set up correctly | `npm run doctor` |
+| Start the backend (venv active) | `cd backend` then `uvicorn app.main:app --port 8001 --reload` |
+| Start the frontend | `npm run dev --prefix frontend` |
 | Start Claude in this project | `claude` |
 | Ask one thing and quit (headless) | `claude -p "your question"` |
 | Name a session so you can find it later | `claude -n my-session-name` |

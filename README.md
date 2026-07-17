@@ -39,17 +39,31 @@ npm run seed
 </td></tr>
 </table>
 
-Then, in two terminals (**with the venv active** in the backend terminal — see Troubleshooting):
+### Confirm you're ready
+
+Before starting the app, run the readiness check from the repo root:
+
+```
+npm run doctor
+```
+
+It verifies Python 3.11+, Node 20+, npm, the Claude Code CLI, the backend virtualenv and its dependencies, the frontend `node_modules`, the seeded database, and the `.claude/` config files — then prints a clear pass/fail summary. Exit code `0` means ready; `1` means at least one required check failed (each failure prints the exact command to fix it). `node scripts/doctor.js --doctor` is accepted as an alias.
+
+### Run the app
+
+In **two terminals** (**with the venv active** in the backend terminal — see Troubleshooting):
 
 ```
 # Terminal 1 (backend/, venv active)
 uvicorn app.main:app --port 8001 --reload
 
-# Terminal 2 (frontend/)
-npm run dev
+# Terminal 2 — from the repo root (no cd needed)
+npm run dev --prefix frontend
 ```
 
-Open http://localhost:3000. The API is at http://localhost:8001 (docs at `/docs`).
+Open http://localhost:3000. The API is at http://localhost:8001 (interactive docs at http://localhost:8001/docs).
+
+**Stop the app** with `Ctrl+C` in each terminal. **Re-seed** the database anytime with `npm run seed` (drops and rebuilds it to exactly 4 suppliers / 10 items / 10 orders). Leave both servers running for the whole workshop; run `claude` in a *third* terminal.
 
 ## 3. The app
 
@@ -96,7 +110,7 @@ frontend/
     components/           tables + forms (presentational, props in/callbacks out)
     App.tsx               React Router routes + nav
 mcp/inventory_mcp/        FastMCP stdio server exposing the live DB read-only
-scripts/                  cross-platform Node runners (seed, ci-review, low-stock)
+scripts/                  cross-platform Node runners (doctor, seed, ci-review, low-stock)
 schemas/                  JSON Schema for CI review findings
 ```
 
@@ -192,7 +206,13 @@ The repo ships with five deliberate, non-fatal flaws — the raw material for th
 
 ### Pre-class smoke test (instructors)
 
-Run this on the teaching machine before class to confirm a clean baseline:
+Fastest check — one command that validates the whole environment:
+
+```
+npm run doctor
+```
+
+For a deeper baseline (actually exercising tests, seed, and the crash flaw):
 
 ```
 # 1. Both test suites green

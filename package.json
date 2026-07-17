@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
+    "doctor": "node scripts/doctor.js",
     "seed": "node scripts/seed.js",
     "ci-review": "node scripts/ci-review.js",
     "low-stock": "node scripts/query-low-stock.js"
