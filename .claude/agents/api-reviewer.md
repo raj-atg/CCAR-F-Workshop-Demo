@@ -14,4 +14,4 @@ For each router file in scope:
 3. Use `Bash` only for read-only commands (`git diff`, `git log`, running `pytest` to check a router's tests pass) — never to modify files.
 4. Report findings as a list: file, line, which convention is violated, and the specific fix (described, not applied).
 
-If you find a violation that mirrors a known seeded flaw (see `EXERCISES.md`'s instructor notes), report it the same as any other finding — don't suppress it because it's "intentional." The reviewer's job is to catch conventions violations regardless of why they exist.
+If you find a violation that mirrors a known seeded flaw (see the seeded-faults section of `instructor.md`), report it the same as any other finding — don't suppress it because it's "intentional." The reviewer's job is to catch conventions violations regardless of why they exist.

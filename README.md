@@ -4,7 +4,7 @@
 
 A hands-on baseline for a mini Claude Code workshop, built for Claude Certified Architect Foundations training. The app — a small factory inventory manager — is scaffolding. The `.claude/` configuration layer is the actual product: every artifact in it is something a working engineer would genuinely add to this codebase, not a demo prop. This is not production code; don't copy the app's simplicity assumptions (no auth, no pagination) into a real project without reconsidering them.
 
-Format: the instructor demos a feature live, participants repeat it and extend it using `EXERCISES.md`.
+Format: the instructor demos a feature live, participants repeat it and extend it. Guides: `instructor.md` (full instructor script, faults, and timing), `PARTICIPANTS.md` (start-to-finish participant walkthrough with all exercises), and `VSCODE-STEPS.md` (the 14-step VS Code-extension path). Instructors typically drive from the Claude Code CLI; participants from the VS Code extension.
 
 ## 2. Quickstart
 
@@ -131,8 +131,8 @@ Every major configuration surface of Claude Code is exercised by something real 
 | **Hooks** | `.claude/hooks/*.js` + `.claude/settings.json` | `PostToolUse` format, `PreToolUse` deny-with-reason, `InstructionsLoaded` logging. |
 | **MCP** | `.mcp.json` + `mcp/inventory_mcp/server.py` | Project-scoped stdio server exposing the live DB read-only. |
 | **Headless / CI** | `scripts/ci-review.js` + `.github/workflows/claude-review.yml` | `-p`, `--output-format json`, `--json-schema` → inline PR comments. |
-| **Sessions** | `EXERCISES.md` §1–3 | `-n`, `--continue`, `--resume`, `--fork-session`, `/fork`. |
-| **Plan mode** | `EXERCISES.md` §4 | When ceremony is wasted vs. worth it. |
+| **Sessions** | `PARTICIPANTS.md` CLI-only exercises | `-n`, `--continue`, `--resume`, `--fork-session`, `/fork`. |
+| **Plan mode** | `PARTICIPANTS.md` CLI-only exercises | When ceremony is wasted vs. worth it. |
 | **Gateway/proxy auth** | `SETUP-PROXY.md` | Running through LiteLLM with env-var auth. |
 
 Verified live against Claude Code `2.1.212` — see §9.
@@ -183,18 +183,16 @@ Budget ~45 minutes. Failure-first beats are marked — let the failure happen be
 | 5 min | `low-stock` command | Run `/low-stock`. | `` !`cmd` `` output already inlined before Claude's response starts. |
 | 5 min | MCP before/after | Ask "which items need reordering" with `.mcp.json` server disconnected (or ask before it connects). Then ask again once `/mcp` shows it connected. | Guessing from `seed.py` vs a live query result. |
 | 5 min | `-p` hang, then fix | Run `claude "Review this PR"` interactively and watch it wait on you. Then run `npm run ci-review`. | The hang is real — that's why CI always needs `-p`. |
-| 5 min | Session resume lab | Follow §6.10 in `EXERCISES.md`: `-n`, `--resume`, `--fork-session`, `/fork`. | Two divergent branches from one shared analysis, neither polluting the other. |
+| 5 min | Session resume lab | Follow the CLI-only exercises in `PARTICIPANTS.md`: `-n`, `--resume`, `--fork-session`, `/fork`. | Two divergent branches from one shared analysis, neither polluting the other. |
 | 5 min | User vs project CLAUDE.md | Add a line to `~/.claude/CLAUDE.md` (personal). Explain it never reaches a teammate who clones the repo — only `./CLAUDE.md` does. | The scope table in `docs/memory` — user vs project. |
 
 ## 6. Participant exercises
 
-**Participants: start with `PARTICIPANTS.md`** — a plain-language walkthrough of setup, every demo you'll watch, and every hands-on task, written to be followed with zero prior Claude Code experience.
-
-See `EXERCISES.md` for numbered, self-checkable exercises covering every runtime feature above, plus extension tasks (write a new skill, add a 4th agent, add a 4th MCP tool, write a `Stop` hook). Instructor spoilers for the five seeded flaws are at the bottom of that file.
+**Participants: start with `PARTICIPANTS.md`** — a plain-language, start-to-finish walkthrough of setup, every demo you'll watch, and every hands-on task (numbered, self-checkable, covering every runtime feature above plus extension tasks: write a new skill, add a 4th agent, add a 4th MCP tool, write a `Stop` hook). VS Code-extension users can follow the condensed 14-step `VSCODE-STEPS.md` instead. Full instructor spoilers for the five seeded flaws live in `instructor.md`.
 
 ### The five seeded flaws (instructors)
 
-The repo ships with five deliberate, non-fatal flaws — the raw material for the "find it, then fix it with Claude" exercises. Full diagnoses are in `EXERCISES.md`'s spoiler section; the one-line map:
+The repo ships with five deliberate, non-fatal flaws — the raw material for the "find it, then fix it with Claude" exercises. Full diagnoses are in `instructor.md`'s seeded-faults section; the one-line map:
 
 | # | Flaw | Surfaces as |
 | --- | --- | --- |

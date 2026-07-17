@@ -8,7 +8,7 @@ Every component declares an explicit `interface <ComponentName>Props` above the 
 
 ## No direct `fetch`
 
-Components receive data and callback props (`onEdit`, `onDelete`, etc.) from their parent page; they never call `api/client.ts` or `fetch` themselves. `SupplierTable.tsx` currently violates this — it calls `fetch` directly for deletes instead of delegating to the parent page. Don't copy that pattern; see `EXERCISES.md` for the fix.
+Components receive data and callback props (`onEdit`, `onDelete`, etc.) from their parent page; they never call `api/client.ts` or `fetch` themselves. `SupplierTable.tsx` currently violates this — it calls `fetch` directly for deletes instead of delegating to the parent page. Don't copy that pattern; see the seeded-faults section of `instructor.md` for the fix.
 
 ## Table + Form pairing
 

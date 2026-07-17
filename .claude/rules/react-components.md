@@ -7,7 +7,7 @@ paths:
 
 # React component conventions
 
-- No direct `fetch` calls in components — delegate to `src/api/client.ts` via callback props from the parent page. `SupplierTable.tsx` currently violates this; see `EXERCISES.md`.
+- No direct `fetch` calls in components — delegate to `src/api/client.ts` via callback props from the parent page. `SupplierTable.tsx` currently violates this; see the seeded-faults section of `instructor.md`.
 - Every component file exports one component as its default export, named after the file.
 - Props interfaces are named `<ComponentName>Props`.
 
