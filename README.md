@@ -68,13 +68,62 @@ Order     id, item_id (FK), quantity, status, placed_at
 
 `Item.category`: `circuit_board | sensor | actuator | controller`. `Order.status`: `pending | shipped | delivered | backordered`.
 
-**Endpoints** (all under `/api`, port 8001): `GET/POST /suppliers`, `GET/PATCH/DELETE /suppliers/{id}`, same shape for `/items` and `/orders`, plus `GET /items/low-stock` (items where `quantity <= reorder_level`).
+**Endpoints** (all under `/api`, port 8001): `GET/POST /suppliers`, `GET/PATCH/DELETE /suppliers/{id}`, same shape for `/items` and `/orders`, plus `GET /items/low-stock` (items where `quantity <= reorder_level`). Interactive API docs at http://localhost:8001/docs.
 
 **Frontend**: three pages (Items, Suppliers, Orders), each a table + create/edit form + delete. React Router, plain CSS, one shared `frontend/src/api/client.ts` wrapping `fetch`.
 
-The seeded database has exactly 4 suppliers, 10 items, and 10 orders. Re-seed anytime with `npm run seed`.
+**Backend layering** is strictly one-way — `router → schema → model`. A router depends on `get_db`, accepts/returns a Pydantic schema, and reads/writes the SQLAlchemy model internally; it never returns a raw model. This is the rule the whole `.claude/` memory hierarchy reinforces.
+
+The seeded database has exactly 4 suppliers, 10 items, and 10 orders. Re-seed anytime with `npm run seed`. The DB file (`backend/inventory.db`) is **not** committed — it's generated from `seed.py`, so anyone reproduces it byte-for-byte with the seed command.
+
+### Source-tree map
+
+```
+backend/
+  app/
+    main.py               FastAPI app, router registration, CORS
+    db/
+      models.py           SQLAlchemy models (Supplier, Item, Order)   ← protected by a hook
+      session.py          engine + SessionLocal + get_db, reads INVENTORY_DB_PATH
+      seed.py             drops/recreates schema, inserts 4/10/10
+    schemas/              Pydantic v2 schemas: Base/Create/Update/Out per entity
+    routers/              items.py, orders.py, suppliers.py  (one CRUD router each)
+  tests/                  pytest + conftest fixtures (in-memory SQLite, StaticPool)
+frontend/
+  src/
+    api/client.ts         the ONLY place fetch is called; normalizes date formats
+    pages/                ItemsPage, SuppliersPage, OrdersPage (own data fetching)
+    components/           tables + forms (presentational, props in/callbacks out)
+    App.tsx               React Router routes + nav
+mcp/inventory_mcp/        FastMCP stdio server exposing the live DB read-only
+scripts/                  cross-platform Node runners (seed, ci-review, low-stock)
+schemas/                  JSON Schema for CI review findings
+```
 
 ## 4. What's here and why
+
+### Claude Code features demonstrated (at a glance)
+
+Every major configuration surface of Claude Code is exercised by something real in this repo:
+
+| Feature area | Where it lives | One-line demo |
+| --- | --- | --- |
+| **Memory hierarchy** (4 levels) | `CLAUDE.md`, `backend/CLAUDE.md`, `backend/app/db/CLAUDE.md`, `frontend/CLAUDE.md`, `frontend/src/components/CLAUDE.md` | Deeper files load lazily only when you touch that directory. |
+| **`@import`** | root `CLAUDE.md` → `standards/*.md` | Style rules kept out of the file people read most. |
+| **Path-scoped rules** | `.claude/rules/*.md` with `paths:` frontmatter | A rule fires only for files matching its glob. |
+| **Skills** | `.claude/skills/{explore-schema,add-entity,review-endpoint}/` | `context: fork`, `argument-hint`, `allowed-tools`, `disable-model-invocation`. |
+| **Legacy commands** | `.claude/commands/low-stock.md` | Old `/command` form + `` !`cmd` `` dynamic injection still works. |
+| **Subagents** | `.claude/agents/{db-explorer,api-reviewer,test-writer}.md` | Tool restriction, read-only vs write-capable, `model:` selection. |
+| **Hooks** | `.claude/hooks/*.js` + `.claude/settings.json` | `PostToolUse` format, `PreToolUse` deny-with-reason, `InstructionsLoaded` logging. |
+| **MCP** | `.mcp.json` + `mcp/inventory_mcp/server.py` | Project-scoped stdio server exposing the live DB read-only. |
+| **Headless / CI** | `scripts/ci-review.js` + `.github/workflows/claude-review.yml` | `-p`, `--output-format json`, `--json-schema` → inline PR comments. |
+| **Sessions** | `EXERCISES.md` §1–3 | `-n`, `--continue`, `--resume`, `--fork-session`, `/fork`. |
+| **Plan mode** | `EXERCISES.md` §4 | When ceremony is wasted vs. worth it. |
+| **Gateway/proxy auth** | `SETUP-PROXY.md` | Running through LiteLLM with env-var auth. |
+
+Verified live against Claude Code `2.1.212` — see §9.
+
+### Why each artifact earns its place
 
 Every `.claude/` artifact below is something this specific codebase needs — not a demo prop. If you wouldn't add it to a real project, it shouldn't be here.
 
@@ -125,7 +174,44 @@ Budget ~45 minutes. Failure-first beats are marked — let the failure happen be
 
 ## 6. Participant exercises
 
+**Participants: start with `PARTICIPANTS.md`** — a plain-language walkthrough of setup, every demo you'll watch, and every hands-on task, written to be followed with zero prior Claude Code experience.
+
 See `EXERCISES.md` for numbered, self-checkable exercises covering every runtime feature above, plus extension tasks (write a new skill, add a 4th agent, add a 4th MCP tool, write a `Stop` hook). Instructor spoilers for the five seeded flaws are at the bottom of that file.
+
+### The five seeded flaws (instructors)
+
+The repo ships with five deliberate, non-fatal flaws — the raw material for the "find it, then fix it with Claude" exercises. Full diagnoses are in `EXERCISES.md`'s spoiler section; the one-line map:
+
+| # | Flaw | Surfaces as |
+| --- | --- | --- |
+| 1 | `SN-2002` has `reorder_level = NULL` | `GET /api/items/low-stock` returns **HTTP 500** (null comparison crash) |
+| 2 | `Item.quantity` vs `Order.quantity` name collision | Confusing rename touching ~10 files across both stacks — the plan-mode lesson |
+| 3 | `suppliers.py` has full CRUD but **zero tests** | A coverage gap `test-writer` exists to fill |
+| 4 | `orders` returns `placed_at` as a **Unix timestamp** | Violates `api-conventions.md`; frontend compensates in `client.ts` |
+| 5 | `SupplierTable.tsx` calls `fetch` directly | Violates the "only `client.ts` calls fetch" rule |
+
+### Pre-class smoke test (instructors)
+
+Run this on the teaching machine before class to confirm a clean baseline:
+
+```
+# 1. Both test suites green
+cd backend && pytest && cd ..
+npm test --prefix frontend
+
+# 2. Seed produces exactly 4/10/10
+npm run seed
+
+# 3. Flaw #1 is live (expect HTTP 500)
+#    (start uvicorn first, then:)
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8001/api/items/low-stock
+
+# 4. CLI sees the project config
+claude --version
+claude mcp list          # inventory/playwright/github all listed
+```
+
+Expected: 8 backend + 9 frontend tests pass, seed prints `4 suppliers, 10 items, 10 orders`, low-stock returns `500`, and `claude mcp list` shows the three project servers (github will warn about a missing PAT — that's expected).
 
 ## 7. Running through an LLM gateway
 
@@ -144,7 +230,7 @@ If you reach Claude Code through a LiteLLM gateway instead of a direct login, se
 
 ## 9. Known version notes
 
-Built and verified against the current hosted Claude Code documentation as of this writing. `claude --version` could not be captured directly in the environment this repo was assembled in (the `claude` binary wasn't on `PATH` there); **run `claude --version` yourself on first setup and record it here.**
+Built and verified against **Claude Code `2.1.212`** and the current hosted documentation. The repo was audited end-to-end against a live install of that version: headless `-p` runs, `--output-format json`, `--json-schema` structured output (the CI mechanism), `.mcp.json` parsing of all three servers, project-memory loading, and skill/command discovery were all confirmed working. If you're on a newer CLI, re-run `claude --version` and note any behavior differences here.
 
 Divergences found against stale/common assumptions, corrected in this repo:
 

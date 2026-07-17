@@ -7,7 +7,9 @@
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/format-on-write.js"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/format-on-write.js"
+            ],
             "statusMessage": "Formatting..."
           }
         ]
@@ -19,9 +21,11 @@
         "hooks": [
           {
             "type": "command",
-            "if": "Edit(backend/app/db/models.py)",
             "command": "node",
-            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/protect-models.js"]
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/protect-models.js"
+            ],
+            "if": "Edit(backend/app/db/models.py)"
           }
         ]
       }
@@ -32,7 +36,9 @@
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/log-instructions.js"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/log-instructions.js"
+            ],
             "async": true
           }
         ]
